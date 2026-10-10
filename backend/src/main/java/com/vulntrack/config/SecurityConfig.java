@@ -82,6 +82,9 @@ public class SecurityConfig {
                 // Kubernetes Health Probes and Prometheus Metrics
                 .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
 
+                // Swagger UI & OpenAPI 3.0 Documentation
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
                 // Read operations: accessible by both VIEWER and ADMIN
                 .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("VIEWER", "ADMIN")
 

@@ -1,0 +1,15 @@
+apiVersion: v2
+name: vulntrack
+description: Helm chart for VulnTrack — Enterprise Vulnerability Management Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - cybersecurity
+  - devops
+  - spring-boot
+  - react
+  - prometheus
+maintainers:
+  - name: VulnTrack SecOps Team
+    email: secops@example.com

@@ -1,0 +1,145 @@
+# ==============================================================================
+# VulnTrack Helm Chart Default Values
+# ==============================================================================
+
+global:
+  environment: local
+  namespace: vulntrack
+
+# ==============================================================================
+# Backend Spring Boot Workload
+# ==============================================================================
+backend:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/placeholder/vulntrack/backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+
+  probes:
+    liveness:
+      path: /actuator/health/liveness
+      initialDelaySeconds: 40
+      periodSeconds: 15
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readiness:
+      path: /actuator/health/readiness
+      initialDelaySeconds: 25
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+  # Horizontal Pod Autoscaling (HPA)
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
+# ==============================================================================
+# Frontend React + NGINX Workload
+# ==============================================================================
+frontend:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/placeholder/vulntrack/frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+  probes:
+    liveness:
+      path: /healthz
+      initialDelaySeconds: 10
+      periodSeconds: 15
+    readiness:
+      path: /healthz
+      initialDelaySeconds: 5
+      periodSeconds: 10
+
+# ==============================================================================
+# Ingress Controller (NGINX)
+# ==============================================================================
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+  hosts:
+    - host: vulntrack.local
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /
+          pathType: Prefix
+          service: frontend
+
+# ==============================================================================
+# PostgreSQL Database Deployment
+# ==============================================================================
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+  service:
+    port: 5432
+  auth:
+    database: vulntrack
+    username: vulntrack_user
+    # Note: Passed via template or external secret in production
+    password: vulntrack_dev_secret_change_me
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# ==============================================================================
+# Prometheus Scraping Annotations
+# ==============================================================================
+monitoring:
+  enabled: true
+  scrape: true
+  path: /actuator/prometheus
+  port: 8080

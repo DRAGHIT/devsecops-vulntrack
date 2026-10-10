@@ -22,8 +22,8 @@ Welcome to the **VulnTrack Learning Handbook**. This guide is designed specifica
 | **12** | [GHCR and Container Image Tagging](12-ghcr-and-image-tagging.md) | Package publishing, semantic versioning, immutable image digests | ✅ Complete |
 | **13** | [Terraform: Infrastructure as Code](13-terraform-iac.md) | Declarative provisioning, state management, Kubernetes provider | ✅ Complete |
 | **14** | [Kubernetes Fundamentals](14-kubernetes-fundamentals.md) | Pods, Deployments, Services, ConfigMaps, and Namespaces | ✅ Complete |
-| **15** | [Helm, Ingress & Autoscaling (HPA)](15-helm-ingress-and-hpa.md) | Package manager, NGINX routing, horizontal pod autoscaling via metrics | ⏳ Phase 7 |
-| **16** | [Prometheus and Grafana Monitoring](16-prometheus-and-grafana.md) | Pull-based metrics scraping, Actuator integration, and dashboarding | ⏳ Phase 7 |
+| **15** | [Helm, Ingress & Autoscaling (HPA)](15-helm-ingress-and-hpa.md) | Package manager, NGINX routing, horizontal pod autoscaling via metrics | ✅ Complete |
+| **16** | [Prometheus and Grafana Monitoring](16-prometheus-and-grafana.md) | Pull-based metrics scraping, Actuator integration, and dashboarding | ✅ Complete |
 | **17** | [End-to-End Local Deployment Guide](17-end-to-end-deployment-guide.md) | Complete step-by-step setup from zero to running cluster | ⏳ Phase 8 |
 | **18** | [Troubleshooting Common Failures](18-troubleshooting-common-failures.md) | Port conflicts, CrashLoopBackOff, database timeouts, CORS errors | ⏳ Phase 8 |
 | **19** | [College Viva & Presentation Script](19-college-viva-and-presentation.md) | Presentation slides outline, 30 common examiner viva Q&A | ⏳ Phase 8 |

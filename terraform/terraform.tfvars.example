@@ -1,0 +1,3 @@
+# Example Terraform variable overrides
+kubeconfig_path = "~/.kube/config"
+namespace_name  = "vulntrack"

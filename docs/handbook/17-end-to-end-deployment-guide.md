@@ -101,6 +101,48 @@ vulntrack-backend-hpa    Deployment/vulntrack-backend   cpu: 12% / 70%   2      
 ### Step 5: Access the Cluster
 To access the web application in a local development cluster:
 ```powershell
-kubectl port-forward svc/vulntrack-frontend 8080:80 -n vulntrack
+kubectl port-forward svc/vulntrack-frontend 3000:80 -n vulntrack
+kubectl port-forward svc/vulntrack-backend 8080:8080 -n vulntrack
 ```
-Open `http://localhost:8080` in your web browser.
+- Open `http://localhost:3000` in your web browser for the React frontend UI.
+- Open `http://localhost:8080/swagger-ui/index.html` for interactive OpenAPI/Swagger testing.
+
+---
+
+## Mode 3: Interactive Swagger UI & API Verification
+
+Whether running via Docker Compose, standalone Spring Boot, or Kubernetes port-forward, you can test all endpoints directly:
+
+### 1. Interactive Swagger UI
+Open your browser to:
+```text
+http://localhost:8080/swagger-ui/index.html
+```
+Click **Authorize** (top right) and enter:
+- **Admin**: `admin` / `AdminSecurePassword!2026` (can test GET, POST, PUT, DELETE)
+- **Viewer**: `viewer` / `ViewerReadOnlyPassword!2026` (can test GET, blocked with 403 on POST/PUT/DELETE)
+
+### 2. Command-Line `curl` Verification
+
+#### Test Read Access with Viewer Credentials (200 OK):
+```powershell
+curl -u viewer:ViewerReadOnlyPassword!2026 http://localhost:8080/api/dashboard/summary
+```
+
+#### Test Write Access with Admin Credentials (201 Created):
+```powershell
+curl -X POST http://localhost:8080/api/assets `
+  -u admin:AdminSecurePassword!2026 `
+  -H "Content-Type: application/json" `
+  -d '{"name":"Billing API","type":"API","environment":"PRODUCTION","description":"Payment gateway service"}'
+```
+
+#### Test RBAC Security Enforcement with Viewer (403 Forbidden):
+```powershell
+curl -X POST http://localhost:8080/api/assets `
+  -u viewer:ViewerReadOnlyPassword!2026 `
+  -H "Content-Type: application/json" `
+  -d '{"name":"Unauthorized Asset","type":"API","environment":"PRODUCTION"}'
+```
+*Expected Output*: HTTP 403 Forbidden with `{"status": 403, "message": "Access Denied"}`.
+

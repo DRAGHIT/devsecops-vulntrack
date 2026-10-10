@@ -162,6 +162,46 @@ flowchart TD
 
 ---
 
-## 📖 Learning Handbook
+## 🚦 Quick Start Guide
 
-A 20-chapter beginner-friendly learning manual is available in [`docs/handbook/`](docs/handbook/README.md) to guide you through every concept, file, code pattern, DevOps pipeline stage, and viva defense questions.
+### 1. Fast Standalone Mode (No Docker Required)
+You can launch VulnTrack directly on your development machine using its built-in in-memory H2 database:
+
+```powershell
+# Terminal 1: Start Backend (Port 8080)
+cd backend
+.\mvnw.cmd spring-boot:run
+
+# Terminal 2: Start Frontend (Port 5173)
+cd frontend
+npm run dev
+```
+
+### 2. Full Containerized Stack (Docker Compose)
+To launch PostgreSQL 16, Backend, and Frontend reverse-proxied together:
+
+```powershell
+cp .env.example .env
+cd docker
+docker compose up --build
+```
+
+### 3. Access URLs & Default Credentials
+
+| Service | URL | Role / Notes |
+| :--- | :--- | :--- |
+| **Frontend UI** | `http://localhost:5173` (or `http://localhost:3000` via Docker) | React SPA with Live Role Switcher |
+| **Swagger UI** | `http://localhost:8080/swagger-ui/index.html` | Interactive OpenAPI 3.0 testing console |
+| **Actuator Health** | `http://localhost:8080/actuator/health` | Liveness & Readiness probe status |
+| **Prometheus Metrics**| `http://localhost:8080/actuator/prometheus` | Raw telemetry scrape target |
+
+#### Default Test Accounts:
+- **Admin (Full Read/Write)**: Username: `admin` | Password: `AdminSecurePassword!2026`
+- **Viewer (Read-Only)**: Username: `viewer` | Password: `ViewerReadOnlyPassword!2026`
+
+---
+
+## 📖 Capstone Learning Handbook
+
+A comprehensive, 20-chapter beginner-friendly learning manual is available in [`docs/handbook/`](docs/handbook/README.md). It walks you through every layer of code, containerization, Kubernetes manifest, security scanning tool, and includes **30 College Viva Questions with Model Answers** and a **10-Slide Presentation Script** in [Chapter 19](docs/handbook/19-college-viva-and-presentation.md).
+

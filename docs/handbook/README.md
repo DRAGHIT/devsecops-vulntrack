@@ -14,8 +14,8 @@ Welcome to the **VulnTrack Learning Handbook**. This guide is designed specifica
 | **04** | [Spring Boot Layered Architecture](04-spring-boot-architecture.md) | Controllers, Services, Repositories, DTOs, and Dependency Injection | ✅ Complete |
 | **05** | [PostgreSQL Schema & Migrations](05-postgresql-schema-and-migrations.md) | Relational design, foreign keys, Flyway migrations, indexing | ✅ Complete |
 | **06** | [REST API Standards and HTTP Codes](06-rest-apis-and-http-codes.md) | Idempotency, HTTP verbs, status code contracts, and error structures | ✅ Complete |
-| **07** | [Authentication, RBAC & AppSec](07-authentication-rbac-and-appsec.md) | Spring Security filter chain, BCrypt, input sanitization, CSRF & CORS | ⏳ Phase 4 |
-| **08** | [Automated Testing Strategy](08-automated-testing-strategy.md) | JUnit 5, Mockito, SpringBootTest, MockMvc, and frontend test suites | ⏳ Phase 4 |
+| **07** | [Authentication, RBAC & AppSec](07-authentication-rbac-and-appsec.md) | Spring Security filter chain, BCrypt, input sanitization, CSRF & CORS | ✅ Complete |
+| **08** | [Automated Testing Strategy](08-automated-testing-strategy.md) | JUnit 5, Mockito, SpringBootTest, MockMvc, and frontend test suites | ✅ Complete |
 | **09** | [Docker and Docker Compose](09-docker-and-docker-compose.md) | Containerization, multi-stage builds, non-root users, dev composition | ⏳ Phase 5 |
 | **10** | [GitHub Actions and CI/CD Automation](10-github-actions-and-cicd.md) | Workflows, jobs, steps, environment secrets, and automated testing | ⏳ Phase 5 |
 | **11** | [Security Scanning: Trivy & SAST](11-security-scanning-trivy-and-sast.md) | CVE detection, secret leakage prevention, vulnerability thresholds | ⏳ Phase 5 |

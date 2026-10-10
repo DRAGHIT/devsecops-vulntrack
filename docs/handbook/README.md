@@ -24,10 +24,10 @@ Welcome to the **VulnTrack Learning Handbook**. This guide is designed specifica
 | **14** | [Kubernetes Fundamentals](14-kubernetes-fundamentals.md) | Pods, Deployments, Services, ConfigMaps, and Namespaces | ✅ Complete |
 | **15** | [Helm, Ingress & Autoscaling (HPA)](15-helm-ingress-and-hpa.md) | Package manager, NGINX routing, horizontal pod autoscaling via metrics | ✅ Complete |
 | **16** | [Prometheus and Grafana Monitoring](16-prometheus-and-grafana.md) | Pull-based metrics scraping, Actuator integration, and dashboarding | ✅ Complete |
-| **17** | [End-to-End Local Deployment Guide](17-end-to-end-deployment-guide.md) | Complete step-by-step setup from zero to running cluster | ⏳ Phase 8 |
-| **18** | [Troubleshooting Common Failures](18-troubleshooting-common-failures.md) | Port conflicts, CrashLoopBackOff, database timeouts, CORS errors | ⏳ Phase 8 |
-| **19** | [College Viva & Presentation Script](19-college-viva-and-presentation.md) | Presentation slides outline, 30 common examiner viva Q&A | ⏳ Phase 8 |
-| **20** | [Hands-on Beginner Exercises](20-hands-on-beginner-exercises.md) | 5 practice challenges to extend VulnTrack with new features | ⏳ Phase 8 |
+| **17** | [End-to-End Local Deployment Guide](17-end-to-end-deployment-guide.md) | Complete step-by-step setup from zero to running cluster | ✅ Complete |
+| **18** | [Troubleshooting Common Failures](18-troubleshooting-common-failures.md) | Port conflicts, CrashLoopBackOff, database timeouts, CORS errors | ✅ Complete |
+| **19** | [College Viva & Presentation Script](19-college-viva-and-presentation.md) | Presentation slides outline, 30 common examiner viva Q&A | ✅ Complete |
+| **20** | [Hands-on Beginner Exercises](20-hands-on-beginner-exercises.md) | 5 practice challenges to extend VulnTrack with new features | ✅ Complete |
 
 ---
 

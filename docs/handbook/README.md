@@ -16,10 +16,10 @@ Welcome to the **VulnTrack Learning Handbook**. This guide is designed specifica
 | **06** | [REST API Standards and HTTP Codes](06-rest-apis-and-http-codes.md) | Idempotency, HTTP verbs, status code contracts, and error structures | ✅ Complete |
 | **07** | [Authentication, RBAC & AppSec](07-authentication-rbac-and-appsec.md) | Spring Security filter chain, BCrypt, input sanitization, CSRF & CORS | ✅ Complete |
 | **08** | [Automated Testing Strategy](08-automated-testing-strategy.md) | JUnit 5, Mockito, SpringBootTest, MockMvc, and frontend test suites | ✅ Complete |
-| **09** | [Docker and Docker Compose](09-docker-and-docker-compose.md) | Containerization, multi-stage builds, non-root users, dev composition | ⏳ Phase 5 |
-| **10** | [GitHub Actions and CI/CD Automation](10-github-actions-and-cicd.md) | Workflows, jobs, steps, environment secrets, and automated testing | ⏳ Phase 5 |
-| **11** | [Security Scanning: Trivy & SAST](11-security-scanning-trivy-and-sast.md) | CVE detection, secret leakage prevention, vulnerability thresholds | ⏳ Phase 5 |
-| **12** | [GHCR and Container Image Tagging](12-ghcr-and-image-tagging.md) | Package publishing, semantic versioning, immutable image digests | ⏳ Phase 5 |
+| **09** | [Docker and Docker Compose](09-docker-and-docker-compose.md) | Containerization, multi-stage builds, non-root users, dev composition | ✅ Complete |
+| **10** | [GitHub Actions and CI/CD Automation](10-github-actions-and-cicd.md) | Workflows, jobs, steps, environment secrets, and automated testing | ✅ Complete |
+| **11** | [Security Scanning: Trivy & SAST](11-security-scanning-trivy-and-sast.md) | CVE detection, secret leakage prevention, vulnerability thresholds | ✅ Complete |
+| **12** | [GHCR and Container Image Tagging](12-ghcr-and-image-tagging.md) | Package publishing, semantic versioning, immutable image digests | ✅ Complete |
 | **13** | [Terraform: Infrastructure as Code](13-terraform-iac.md) | Declarative provisioning, state management, Kubernetes provider | ⏳ Phase 6 |
 | **14** | [Kubernetes Fundamentals](14-kubernetes-fundamentals.md) | Pods, Deployments, Services, ConfigMaps, and Namespaces | ⏳ Phase 6 |
 | **15** | [Helm, Ingress & Autoscaling (HPA)](15-helm-ingress-and-hpa.md) | Package manager, NGINX routing, horizontal pod autoscaling via metrics | ⏳ Phase 7 |

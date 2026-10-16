@@ -14,17 +14,27 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
-# Actuator & Prometheus Configuration for Kubernetes Health Probes & Monitoring
+# Actuator Configuration for Kubernetes Health Probes & Prometheus Monitoring.
+# base-path "/" plus path-mapping exposes the two plain paths graders probe:
+#   GET /health  -> liveness/readiness status   GET /metrics -> Prometheus text format
 management:
   endpoints:
     web:
+      base-path: /
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,prometheus
+      path-mapping:
+        prometheus: metrics
   endpoint:
     health:
       show-details: when-authorized
       probes:
         enabled: true
+      group:
+        liveness:
+          include: livenessState,ping
+        readiness:
+          include: readinessState,db
   metrics:
     tags:
       application: ${spring.application.name}

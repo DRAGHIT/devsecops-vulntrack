@@ -11,6 +11,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +28,7 @@ public class GlobalExceptionHandler {
         ErrorResponseDto error = ErrorResponseDto.of(
             HttpStatus.NOT_FOUND.value(),
             "Not Found",
+            "RESOURCE_NOT_FOUND",
             ex.getMessage(),
             request.getRequestURI()
         );
@@ -40,6 +42,7 @@ public class GlobalExceptionHandler {
         ErrorResponseDto error = ErrorResponseDto.of(
             HttpStatus.BAD_REQUEST.value(),
             "Bad Request",
+            "BAD_REQUEST",
             ex.getMessage(),
             request.getRequestURI()
         );
@@ -58,6 +61,7 @@ public class GlobalExceptionHandler {
         ErrorResponseDto error = ErrorResponseDto.ofValidation(
             HttpStatus.BAD_REQUEST.value(),
             "Validation Failed",
+            "VALIDATION_FAILED",
             "Input payload failed validation constraints",
             request.getRequestURI(),
             fieldErrors
@@ -72,6 +76,7 @@ public class GlobalExceptionHandler {
         ErrorResponseDto error = ErrorResponseDto.of(
             HttpStatus.FORBIDDEN.value(),
             "Forbidden",
+            "FORBIDDEN",
             "You do not have permission to perform this action",
             request.getRequestURI()
         );
@@ -85,7 +90,24 @@ public class GlobalExceptionHandler {
         ErrorResponseDto error = ErrorResponseDto.of(
             HttpStatus.BAD_REQUEST.value(),
             "Bad Request",
+            "BAD_REQUEST",
             ex.getMessage(),
+            request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseDto> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+                                                               HttpServletRequest request) {
+        String message = String.format("Parameter '%s' has invalid value '%s'; expected type %s",
+            ex.getName(), ex.getValue(), ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown");
+        log.warn("Type mismatch on path {}: {}", request.getRequestURI(), message);
+        ErrorResponseDto error = ErrorResponseDto.of(
+            HttpStatus.BAD_REQUEST.value(),
+            "Bad Request",
+            "BAD_REQUEST",
+            message,
             request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
@@ -99,6 +121,7 @@ public class GlobalExceptionHandler {
         ErrorResponseDto error = ErrorResponseDto.of(
             HttpStatus.INTERNAL_SERVER_ERROR.value(),
             "Internal Server Error",
+            "INTERNAL_SERVER_ERROR",
             "An unexpected error occurred while processing the request",
             request.getRequestURI()
         );

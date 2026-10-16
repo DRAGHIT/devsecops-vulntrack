@@ -79,8 +79,8 @@ public class SecurityConfig {
                 .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000))
             )
             .authorizeHttpRequests(auth -> auth
-                // Kubernetes Health Probes and Prometheus Metrics
-                .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
+                // Kubernetes Health Probes and Prometheus Metrics (actuator base-path is "/")
+                .requestMatchers("/health/**", "/info", "/metrics").permitAll()
 
                 // Swagger UI & OpenAPI 3.0 Documentation
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

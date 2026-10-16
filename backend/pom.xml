@@ -55,7 +55,7 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- Micrometer Prometheus: Exposes /actuator/prometheus for monitoring -->
+        <!-- Micrometer Prometheus: Exposes /metrics for monitoring -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>

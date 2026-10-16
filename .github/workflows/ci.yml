@@ -27,11 +27,16 @@ jobs:
           fetch-depth: 0
 
       - name: GitLeaks Secret Scan
-        # Runs the scanner container directly: the hosted action requires a
-        # GitProtect licence token that a student repository will not have.
-        # gitleaks reads .git through go-git, so the whole history is audited.
+        # The hosted action needs a licence token a student repository will not
+        # have, so the scanner container runs directly. The GIT_CONFIG_* pair
+        # marks the checkout trusted: without it git refuses to read a repo
+        # owned by the runner user and gitleaks reports "0 commits scanned".
         run: |
-          docker run --rm -v "$GITHUB_WORKSPACE:/w" -w /w \
+          docker run --rm \
+            -e GIT_CONFIG_COUNT=1 \
+            -e GIT_CONFIG_KEY_0=safe.directory \
+            -e GIT_CONFIG_VALUE_0=/w \
+            -v "$GITHUB_WORKSPACE:/w" -w /w \
             zricethezav/gitleaks:latest \
             detect --source=/w --redact --no-banner --exit-code 1
 

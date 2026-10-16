@@ -1,14 +1,17 @@
 import React from 'react';
-import { 
-  Server, 
-  AlertCircle, 
-  Flame, 
-  CheckCircle2, 
-  ShieldAlert, 
+import {
+  Server,
+  AlertCircle,
+  Flame,
+  CheckCircle2,
+  ShieldAlert,
   Clock,
-  RefreshCw
+  RefreshCw,
+  PieChart,
+  Workflow
 } from 'lucide-react';
 import { DashboardSummary } from '../types';
+import { SeverityDonut } from './charts/SeverityDonut';
 
 interface DashboardViewProps {
   summary: DashboardSummary | null;
@@ -51,12 +54,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   if (!summary) return null;
 
-  // Calculate severity proportions for the breakdown bar
+  // Calculate severity proportions for the donut chart
   const totalFindings = Object.values(summary.severityCounts).reduce((a, b) => a + b, 0);
-  const criticalPct = totalFindings > 0 ? ((summary.severityCounts['CRITICAL'] || 0) / totalFindings) * 100 : 0;
-  const highPct = totalFindings > 0 ? ((summary.severityCounts['HIGH'] || 0) / totalFindings) * 100 : 0;
-  const mediumPct = totalFindings > 0 ? ((summary.severityCounts['MEDIUM'] || 0) / totalFindings) * 100 : 0;
-  const lowPct = totalFindings > 0 ? ((summary.severityCounts['LOW'] || 0) / totalFindings) * 100 : 0;
+
+  // Remediation lifecycle: the API reports OPEN and FIXED counts directly;
+  // IN_PROGRESS is derived so all three lifecycle stages always sum to the total.
+  const inProgressCount = Math.max(totalFindings - summary.openVulnerabilities - summary.fixedVulnerabilities, 0);
+  const lifecycleStages = [
+    { key: 'OPEN', label: 'Open', count: summary.openVulnerabilities, color: 'var(--status-open)' },
+    { key: 'IN_PROGRESS', label: 'In Progress', count: inProgressCount, color: 'var(--status-progress)' },
+    { key: 'FIXED', label: 'Fixed', count: summary.fixedVulnerabilities, color: 'var(--status-fixed)' },
+  ];
 
   return (
     <div>
@@ -114,38 +122,73 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* Severity Breakdown Bar */}
-      <div className="glass-panel severity-bar-container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3>Vulnerability Severity Distribution</h3>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Total Findings: {totalFindings}
-          </span>
+      {/* Charts Row: Severity Donut + Remediation Lifecycle */}
+      <div className="dashboard-charts-grid">
+        <div className="glass-panel chart-panel">
+          <div className="chart-panel-header">
+            <PieChart size={18} color="var(--primary)" />
+            <div>
+              <h3>Vulnerability Severity Distribution</h3>
+              <p className="chart-panel-subtitle">Total Findings: {totalFindings}</p>
+            </div>
+          </div>
+
+          <div className="donut-layout">
+            <SeverityDonut severityCounts={summary.severityCounts} />
+            <div className="severity-legend donut-legend">
+              {(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const).map((sev) => {
+                const count = summary.severityCounts[sev] || 0;
+                const pct = totalFindings > 0 ? ((count / totalFindings) * 100).toFixed(0) : 0;
+                return (
+                  <div className="legend-item" key={sev}>
+                    <span className={`legend-dot ${sev}`}></span>
+                    <span>{sev.charAt(0) + sev.slice(1).toLowerCase()}: <strong>{count}</strong> ({pct}%)</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        <div className="severity-breakdown-bar">
-          <div className="sev-bar-segment CRITICAL" style={{ width: `${criticalPct}%` }} title={`Critical: ${summary.severityCounts['CRITICAL'] || 0}`} />
-          <div className="sev-bar-segment HIGH" style={{ width: `${highPct}%` }} title={`High: ${summary.severityCounts['HIGH'] || 0}`} />
-          <div className="sev-bar-segment MEDIUM" style={{ width: `${mediumPct}%` }} title={`Medium: ${summary.severityCounts['MEDIUM'] || 0}`} />
-          <div className="sev-bar-segment LOW" style={{ width: `${lowPct}%` }} title={`Low: ${summary.severityCounts['LOW'] || 0}`} />
-        </div>
+        <div className="glass-panel chart-panel">
+          <div className="chart-panel-header">
+            <Workflow size={18} color="var(--status-progress)" />
+            <div>
+              <h3>Remediation Lifecycle</h3>
+              <p className="chart-panel-subtitle">Findings tracked from discovery to resolution</p>
+            </div>
+          </div>
 
-        <div className="severity-legend">
-          <div className="legend-item">
-            <span className="legend-dot CRITICAL"></span>
-            <span>Critical: <strong>{summary.severityCounts['CRITICAL'] || 0}</strong> ({criticalPct.toFixed(0)}%)</span>
+          <div className="lifecycle-list">
+            {lifecycleStages.map((stage) => {
+              const pct = totalFindings > 0 ? (stage.count / totalFindings) * 100 : 0;
+              return (
+                <div className="lifecycle-row" key={stage.key} data-testid={`lifecycle-${stage.key}`}>
+                  <div className="lifecycle-row-header">
+                    <span className="lifecycle-label">{stage.label}</span>
+                    <span className="lifecycle-values">
+                      <strong>{stage.count}</strong>
+                      <span className="lifecycle-pct">{pct.toFixed(0)}%</span>
+                    </span>
+                  </div>
+                  <div className="lifecycle-track">
+                    <div
+                      className="lifecycle-fill"
+                      style={{ width: `${pct}%`, backgroundColor: stage.color }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div className="legend-item">
-            <span className="legend-dot HIGH"></span>
-            <span>High: <strong>{summary.severityCounts['HIGH'] || 0}</strong> ({highPct.toFixed(0)}%)</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-dot MEDIUM"></span>
-            <span>Medium: <strong>{summary.severityCounts['MEDIUM'] || 0}</strong> ({mediumPct.toFixed(0)}%)</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-dot LOW"></span>
-            <span>Low: <strong>{summary.severityCounts['LOW'] || 0}</strong> ({lowPct.toFixed(0)}%)</span>
+
+          <div className="lifecycle-footer">
+            <CheckCircle2 size={15} color="var(--status-fixed)" />
+            <span>
+              {totalFindings > 0
+                ? `${((summary.fixedVulnerabilities / totalFindings) * 100).toFixed(0)}% of all findings have been remediated`
+                : 'No findings recorded yet'}
+            </span>
           </div>
         </div>
       </div>

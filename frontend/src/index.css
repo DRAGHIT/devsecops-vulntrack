@@ -283,30 +283,7 @@ body {
   color: var(--text-secondary);
 }
 
-/* Severity Distribution Bar */
-.severity-bar-container {
-  margin-bottom: 2rem;
-}
-
-.severity-breakdown-bar {
-  display: flex;
-  height: 12px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
-  margin: 1rem 0;
-}
-
-.sev-bar-segment {
-  height: 100%;
-  transition: width 0.4s ease;
-}
-
-.sev-bar-segment.CRITICAL { background-color: var(--sev-critical); }
-.sev-bar-segment.HIGH { background-color: var(--sev-high); }
-.sev-bar-segment.MEDIUM { background-color: var(--sev-medium); }
-.sev-bar-segment.LOW { background-color: var(--sev-low); }
-
+/* Severity legend (donut chart) */
 .severity-legend {
   display: flex;
   gap: 1.5rem;
@@ -325,6 +302,7 @@ body {
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .legend-dot.CRITICAL { background-color: var(--sev-critical); }
@@ -641,4 +619,222 @@ body {
 .status-select:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ==============================================================================
+   Dashboard Charts Row (donut + remediation lifecycle)
+   ============================================================================== */
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.chart-panel-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.chart-panel-header h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.chart-panel-subtitle {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 0.15rem;
+}
+
+/* Donut chart */
+.donut-layout {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.donut-segment {
+  transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease;
+}
+
+.donut-total {
+  fill: var(--text-primary);
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.donut-total-label {
+  fill: var(--text-muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+}
+
+.donut-legend {
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 160px;
+}
+
+/* Remediation lifecycle bars */
+.lifecycle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.lifecycle-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.4rem;
+}
+
+.lifecycle-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.lifecycle-values {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.lifecycle-pct {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.lifecycle-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.lifecycle-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+.lifecycle-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* ==============================================================================
+   Vulnerability toolbar (search + result count)
+   ============================================================================== */
+.vuln-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.85rem;
+  flex: 1;
+  min-width: 240px;
+  max-width: 420px;
+  transition: border-color 0.2s ease;
+}
+
+.search-box:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-clear-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0.15rem;
+  border-radius: var(--radius-sm);
+}
+
+.search-clear-btn:hover {
+  color: var(--text-primary);
+}
+
+.result-count {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ==============================================================================
+   Responsive adjustments
+   ============================================================================== */
+@media (max-width: 860px) {
+  .navbar {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .nav-tabs {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .main-content {
+    padding: 1.25rem 1rem;
+  }
+
+  .view-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .donut-layout {
+    justify-content: center;
+  }
+
+  .dashboard-charts-grid {
+    grid-template-columns: 1fr;
+  }
 }

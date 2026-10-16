@@ -46,10 +46,12 @@ describe('DashboardView Component', () => {
     expect(screen.getAllByText('3')[0]).toBeInTheDocument();
     expect(screen.getByText('Critical Severity Risks')).toBeInTheDocument();
 
-    expect(screen.getByText('8')).toBeInTheDocument();
+    // '8' (open findings) also appears in the lifecycle panel; assert on the first match
+    expect(screen.getAllByText('8')[0]).toBeInTheDocument();
     expect(screen.getByText('Open Findings')).toBeInTheDocument();
 
-    expect(screen.getByText('15')).toBeInTheDocument();
+    // '15' also appears in the remediation lifecycle panel, so assert on all matches
+    expect(screen.getAllByText('15')[0]).toBeInTheDocument();
     expect(screen.getByText('Remediated / Fixed')).toBeInTheDocument();
   });
 

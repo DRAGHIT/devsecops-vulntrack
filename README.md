@@ -2,7 +2,7 @@
 
 A lightweight, enterprise-grade Cybersecurity Portfolio & DevOps Capstone Project.
 
-[![CI Pipeline](https://github.com/placeholder/vulntrack/actions/workflows/ci.yml/badge.svg)](https://github.com)
+[![CI Pipeline](https://github.com/DRAGHIT/devsecops-vulntrack/actions/workflows/ci.yml/badge.svg)](https://github.com/DRAGHIT/devsecops-vulntrack/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Java: 17](https://img.shields.io/badge/Java-17-orange.svg)](https://adoptium.net)
 [![Spring Boot: 3.3](https://img.shields.io/badge/Spring%20Boot-3.3-brightgreen.svg)](https://spring.io)
@@ -223,9 +223,9 @@ cd ..
 # Bootstrap namespace/quota/service-account, then deploy the chart
 kubectl apply -f k8s/
 helm upgrade --install vulntrack ./helm/vulntrack --namespace vulntrack `
-  --set backend.image.repository=ghcr.io/<owner>/vulntrack/backend `
+  --set backend.image.repository=ghcr.io/draghit/devsecops-vulntrack/backend `
   --set backend.image.tag=<commit-sha> `
-  --set frontend.image.repository=ghcr.io/<owner>/vulntrack/frontend `
+  --set frontend.image.repository=ghcr.io/draghit/devsecops-vulntrack/frontend `
   --set frontend.image.tag=<commit-sha>
 
 # Prometheus + Grafana

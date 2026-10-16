@@ -27,9 +27,13 @@ jobs:
           fetch-depth: 0
 
       - name: GitLeaks Secret Scan
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Runs the scanner container directly: the hosted action requires a
+        # GitProtect licence token that a student repository will not have.
+        # gitleaks reads .git through go-git, so the whole history is audited.
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/w" -w /w \
+            zricethezav/gitleaks:latest \
+            detect --source=/w --redact --no-banner --exit-code 1
 
   # ============================================================================
   # 2. Build & Test Backend (Spring Boot + JUnit 5 + MockMvc)

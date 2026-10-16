@@ -22,7 +22,7 @@ fullnameOverride: ""
 backend:
   replicaCount: 2
   image:
-    repository: ghcr.io/your-github-username/vulntrack/backend
+    repository: ghcr.io/draghit/devsecops-vulntrack/backend
     # Empty falls back to .Chart.AppVersion; CI publishes the commit SHA.
     tag: ""
     pullPolicy: IfNotPresent
@@ -74,7 +74,7 @@ frontend:
   # Rubric M8: at least two replicas for both application tiers.
   replicaCount: 2
   image:
-    repository: ghcr.io/your-github-username/vulntrack/frontend
+    repository: ghcr.io/draghit/devsecops-vulntrack/frontend
     tag: ""
     pullPolicy: IfNotPresent
 

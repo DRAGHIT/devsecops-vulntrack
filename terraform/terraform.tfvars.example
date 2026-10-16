@@ -1,3 +1,31 @@
-# Example Terraform variable overrides
-kubeconfig_path = "~/.kube/config"
-namespace_name  = "vulntrack"
+# ==============================================================================
+# VulnTrack Terraform Input Example
+# Copy to terraform.tfvars (git-ignored) and edit. NEVER commit real credentials.
+# Credentials are supplied through the AWS CLI/ENV, never through these values:
+#   export AWS_ACCESS_KEY_ID=...
+#   export AWS_SECRET_ACCESS_KEY=...
+#   export AWS_DEFAULT_REGION=eu-west-1
+# ==============================================================================
+
+aws_region   = "eu-west-1"
+project_name = "vulntrack"
+environment  = "capstone"
+
+vpc_cidr = "10.0.0.0/16"
+
+# Rubric M7 requires at least two public subnets in different AZs.
+public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+
+# Leave commented to accept the AWS-supported default version.
+# kubernetes_version = "1.31"
+
+# Two t3.medium workers is the smallest sizing that fits VulnTrack
+# (2 backend + 2 frontend + PostgreSQL) with headroom for metrics.
+node_instance_type    = "t3.medium"
+node_desired_capacity = 2
+node_min_capacity     = 1
+node_max_capacity     = 3
+
+# Restrict API access to your own public IP for a real deployment:
+# kubectl_access_cidr = "203.0.113.45/32"
+kubectl_access_cidr = "0.0.0.0/0"

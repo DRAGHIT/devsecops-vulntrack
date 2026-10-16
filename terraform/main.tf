@@ -1,83 +1,58 @@
 # ==============================================================================
-# VulnTrack Infrastructure as Code (Terraform)
-# Target: Local Kubernetes (kind / Minikube / Docker Desktop / MicroK8s)
-# Purpose: Provision Cluster Baseline (Namespace, Quotas, Limits, ServiceAccount)
+# VulnTrack Infrastructure as Code (Terraform) — AWS Provider Baseline
+# Target: AWS VPC + EKS Cluster + Managed Node Group
 # ==============================================================================
 
 terraform {
   required_version = ">= 1.5.0"
+
   required_providers {
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.30.0"
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.60"
+    }
+  }
+
+  # State lives in the developer's local terraform.tfstate by default.
+  # For a team, move it to S3 + locking:
+  #
+  # backend "s3" {
+  #   bucket = "my-terraform-state"
+  #   key    = "vulntrack/terraform.tfstate"
+  #   region = "eu-west-1"
+  # }
+}
+
+provider "aws" {
+  region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project       = var.project_name
+      ManagedBy     = "terraform"
+      Environment   = var.environment
+      "cost-center" = "student-capstone"
     }
   }
 }
 
-provider "kubernetes" {
-  config_path = var.kubeconfig_path
+# Two real availability zones, whichever region the student selects.
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
-# 1. Dedicated Application Namespace
-resource "kubernetes_namespace" "vulntrack" {
-  metadata {
-    name = var.namespace_name
-    labels = {
-      "app.kubernetes.io/name"       = "vulntrack"
-      "app.kubernetes.io/part-of"    = "vulntrack"
-      "app.kubernetes.io/managed-by" = "terraform"
-    }
-  }
-}
+locals {
+  name              = "${var.project_name}-${var.environment}"
+  public_subnet_ids = aws_subnet.public[*].id
 
-# 2. Namespace Resource Quota (Protects cluster from noisy-neighbor starvation)
-resource "kubernetes_resource_quota" "vulntrack_quota" {
-  metadata {
-    name      = "vulntrack-resource-quota"
-    namespace = kubernetes_namespace.vulntrack.metadata[0].name
+  # EKS needs these tags on the subnets it schedules pods into, otherwise the
+  # ELB created for type=LoadBalancer services cannot discover the subnets.
+  subnet_tags = {
+    "kubernetes.io/role/elb"              = "1"
+    "kubernetes.io/cluster/${local.name}" = "shared"
   }
 
-  spec {
-    hard = {
-      "requests.cpu"    = "2000m"
-      "requests.memory" = "2Gi"
-      "limits.cpu"      = "4000m"
-      "limits.memory"   = "4Gi"
-      "pods"            = "15"
-    }
-  }
-}
-
-# 3. Limit Range (Enforces default container limits when omitted in manifests)
-resource "kubernetes_limit_range" "vulntrack_limits" {
-  metadata {
-    name      = "vulntrack-default-limits"
-    namespace = kubernetes_namespace.vulntrack.metadata[0].name
-  }
-
-  spec {
-    limit {
-      type = "Container"
-      default = {
-        cpu    = "500m"
-        memory = "512Mi"
-      }
-      default_request = {
-        cpu    = "100m"
-        memory = "128Mi"
-      }
-    }
-  }
-}
-
-# 4. Dedicated Service Account with Least Privilege
-resource "kubernetes_service_account" "vulntrack_sa" {
-  metadata {
-    name      = "vulntrack-workload-sa"
-    namespace = kubernetes_namespace.vulntrack.metadata[0].name
-    labels = {
-      "app.kubernetes.io/name"       = "vulntrack"
-      "app.kubernetes.io/managed-by" = "terraform"
-    }
+  cluster_tags = {
+    "kubernetes.io/cluster/${local.name}" = "owned"
   }
 }

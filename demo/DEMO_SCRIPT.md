@@ -1,7 +1,9 @@
 # VulnTrack — Live Demo Script
 
 Eight minutes, in the order a grader expects. Each step states the command, the
-screen to show, and the rubric module it satisfies.
+screen to show, and the rubric module it satisfies. The matching slides are in
+[`demo/vulntrack-capstone.pptx`](vulntrack-capstone.pptx) — 10 slides, one per
+section.
 
 | # | Show | Command / URL | Rubric |
 | :-- | :--- | :--- | :--- |
@@ -22,7 +24,8 @@ screen to show, and the rubric module it satisfies.
 ## The live "commit to production" segment (M10, 3 points)
 
 This is the part the rubric explicitly asks you to perform in front of the
-marker. It takes about 90 seconds of waiting, so narrate chapter 10 while it runs.
+marker. It takes about 90 seconds of waiting, so narrate the four pipeline
+stages while it runs: secret scan, tests, image build, GHCR publish.
 
 ```powershell
 # 1. Change something visible
@@ -48,7 +51,7 @@ kubectl -n vulntrack get pods -l app.kubernetes.io/component=frontend
 
 - **"Pods are Pending"** → the node group ran out of CPU. `kubectl describe pod`
   shows the FailedScheduling message; drop `backend.resources.requests` or scale
-  the node group up. Chapter 18 has this table.
+  the node group up.
 - **"Prometheus target DOWN"** → the ServiceMonitor selector vs. Service labels;
   `kubectl -n vulntrack get svc --show-labels`.
 - **"404 through the Ingress"** → the ingress-nginx addon is missing, or the

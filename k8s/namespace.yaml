@@ -1,0 +1,16 @@
+# Dedicated namespace for the VulnTrack workloads.
+# Apply with: kubectl apply -f k8s/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vulntrack
+  labels:
+    app.kubernetes.io/name: vulntrack
+    app.kubernetes.io/part-of: vulntrack
+    app.kubernetes.io/managed-by: kubectl
+    # Enforce "baseline" so the official postgres image can still start, while
+    # "restricted" is audited and warned about - the hardening checklist for
+    # the app pods (capabilities, seccomp) without breaking the demo.
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

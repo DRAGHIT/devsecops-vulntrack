@@ -1,0 +1,40 @@
+# Kubernetes CRD wrapper around monitoring/prometheus/alert-rules.yaml.
+# kube-prometheus-stack only loads rules that are PrometheusRule objects, so the
+# same three alerts are published as a CR here; keep the two files in sync.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: vulntrack-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: vulntrack
+spec:
+  groups:
+    - name: vulntrack-alerts
+      rules:
+        - alert: VulnTrackBackendDown
+          expr: up{job="vulntrack-backend"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "VulnTrack Spring Boot Backend is unreachable"
+            description: "No scrape telemetry received from vulntrack-backend for over 1 minute."
+
+        - alert: HighHttp5xxErrorRate
+          expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[2m])) / sum(rate(http_server_requests_seconds_count[2m])) > 0.05
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "High HTTP 5xx Error Rate detected on API endpoints"
+            description: "More than 5% of all HTTP requests are failing with internal server errors."
+
+        - alert: HighJvmHeapUsage
+          expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.85
+          for: 3m
+          labels:
+            severity: warning
+          annotations:
+            summary: "JVM Heap usage exceeds 85%"
+            description: "Memory pressure detected on Spring Boot JVM heap. Check for potential memory leaks or increase memory limits."

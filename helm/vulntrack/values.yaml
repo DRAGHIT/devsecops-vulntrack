@@ -1,10 +1,20 @@
 # ==============================================================================
 # VulnTrack Helm Chart Default Values
+# Images are published by CI with an immutable Git SHA tag:
+#   helm upgrade --install vulntrack ./helm/vulntrack \
+#     --namespace vulntrack \
+#     --set backend.image.repository=ghcr.io/<owner>/vulntrack/backend \
+#     --set backend.image.tag=<commit-sha> \
+#     --set frontend.image.repository=ghcr.io/<owner>/vulntrack/frontend \
+#     --set frontend.image.tag=<commit-sha>
 # ==============================================================================
 
 global:
   environment: local
   namespace: vulntrack
+
+nameOverride: ""
+fullnameOverride: ""
 
 # ==============================================================================
 # Backend Spring Boot Workload
@@ -12,8 +22,9 @@ global:
 backend:
   replicaCount: 2
   image:
-    repository: ghcr.io/placeholder/vulntrack/backend
-    tag: "latest"
+    repository: ghcr.io/your-github-username/vulntrack/backend
+    # Empty falls back to .Chart.AppVersion; CI publishes the commit SHA.
+    tag: ""
     pullPolicy: IfNotPresent
 
   service:
@@ -37,13 +48,13 @@ backend:
 
   probes:
     liveness:
-      path: /actuator/health/liveness
+      path: /health/liveness
       initialDelaySeconds: 40
       periodSeconds: 15
       timeoutSeconds: 3
       failureThreshold: 3
     readiness:
-      path: /actuator/health/readiness
+      path: /health/readiness
       initialDelaySeconds: 25
       periodSeconds: 10
       timeoutSeconds: 3
@@ -60,15 +71,19 @@ backend:
 # Frontend React + NGINX Workload
 # ==============================================================================
 frontend:
-  replicaCount: 1
+  # Rubric M8: at least two replicas for both application tiers.
+  replicaCount: 2
   image:
-    repository: ghcr.io/placeholder/vulntrack/frontend
-    tag: "latest"
+    repository: ghcr.io/your-github-username/vulntrack/frontend
+    tag: ""
     pullPolicy: IfNotPresent
 
   service:
     type: ClusterIP
+    # Cluster-facing port stays 80 so Ingress/rules read naturally.
     port: 80
+  # NGINX runs unprivileged inside the image, so it cannot bind port 80.
+  containerPort: 8080
 
   resources:
     requests:
@@ -77,6 +92,13 @@ frontend:
     limits:
       cpu: 200m
       memory: 128Mi
+
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    runAsGroup: 101
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
 
   probes:
     liveness:
@@ -108,6 +130,15 @@ ingress:
           service: frontend
 
 # ==============================================================================
+# Application Credentials (read-only demo personas; override with --set)
+# ==============================================================================
+appCredentials:
+  adminUsername: admin
+  viewerUsername: viewer
+  adminPassword: AdminSecurePassword!2026
+  viewerPassword: ViewerReadOnlyPassword!2026
+
+# ==============================================================================
 # PostgreSQL Database Deployment
 # ==============================================================================
 postgresql:
@@ -121,8 +152,12 @@ postgresql:
   auth:
     database: vulntrack
     username: vulntrack_user
-    # Note: Passed via template or external secret in production
+    # Override at install time for anything beyond a local demo:
+    #   --set postgresql.auth.password="$POSTGRES_PASSWORD"
     password: vulntrack_dev_secret_change_me
+  # Separate PGDATA keeps initdb out of the lost+found directory that
+  # host-path provisioners (kind/minikube) place on the volume root.
+  pgData: /var/lib/postgresql/data/pgdata
   persistence:
     enabled: true
     size: 2Gi
@@ -141,5 +176,5 @@ postgresql:
 monitoring:
   enabled: true
   scrape: true
-  path: /actuator/prometheus
+  path: /metrics
   port: 8080

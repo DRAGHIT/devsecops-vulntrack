@@ -1,0 +1,24 @@
+# Scrapes the Spring Boot backend through the ServiceMonitor CRD installed by
+# kube-prometheus-stack. Job name == resource name, which is the job label the
+# alert rules in monitoring/prometheus/alert-rules.yaml match on.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vulntrack-backend
+  namespace: vulntrack
+  labels:
+    app.kubernetes.io/name: vulntrack
+    app.kubernetes.io/component: backend
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vulntrack
+      app.kubernetes.io/component: backend
+  namespaceSelector:
+    matchNames:
+      - vulntrack
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s

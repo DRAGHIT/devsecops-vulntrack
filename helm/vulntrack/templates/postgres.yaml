@@ -36,6 +36,11 @@ spec:
         app.kubernetes.io/name: {{ include "vulntrack.name" . }}
         app.kubernetes.io/component: postgres
     spec:
+      securityContext:
+        # postgres image ships its server as UID/GID 999.
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
       containers:
         - name: postgres
           image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
@@ -53,8 +58,22 @@ spec:
                 secretKeyRef:
                   name: {{ include "vulntrack.fullname" . }}-secrets
                   key: postgres-password
+            # Host-path provisioners (kind/minikube) put lost+found on the volume
+            # root, which makes initdb refuse the default data directory.
+            - name: PGDATA
+              value: {{ .Values.postgresql.pgData | quote }}
           resources:
             {{- toYaml .Values.postgresql.resources | nindent 12 }}
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", {{ .Values.postgresql.auth.username | quote }}]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", {{ .Values.postgresql.auth.username | quote }}]
+            initialDelaySeconds: 30
+            periodSeconds: 20
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data

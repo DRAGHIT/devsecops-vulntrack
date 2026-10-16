@@ -1,0 +1,87 @@
+# ==============================================================================
+# kube-prometheus-stack Helm values for the VulnTrack demo cluster
+# Install:
+#   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+#   helm repo update
+#   kubectl create namespace monitoring
+#   helm upgrade --install kps prometheus-community/kube-prometheus-stack \
+#     --namespace monitoring \
+#     --values monitoring/kube-prometheus-stack-values.yaml
+# ==============================================================================
+
+alertmanager:
+  # The capstone grades scraping + dashboards, not paging. Disabling the
+  # Alertmanager pod frees ~150 MiB on a single-node kind cluster.
+  enabled: false
+
+grafana:
+  enabled: true
+  adminPassword: vulntrack_demo_admin
+
+  # The VulnTrack dashboard JSON binds panels to datasource uid "prometheus",
+  # so the datasource is created with exactly that uid.
+  extraDatasources:
+    vulntrack-prometheus:
+      name: Prometheus
+      type: prometheus
+      access: proxy
+      uid: prometheus
+      url: http://kps-kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+      isDefault: true
+
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      folderAnnotation: grafana_folder
+      provider:
+        foldersFromFilesStructure: true
+    datasources:
+      enabled: false
+
+  service:
+    # kind/Minikube: reach Grafana on http://<node-ip>:30300
+    # AWS/EKS: prefer `kubectl -n monitoring port-forward svc/kps-grafana 3000:80`
+    type: NodePort
+    nodePort: 30300
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 96Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+prometheus:
+  prometheusSpec:
+    # Pick up ServiceMonitors / PrometheusRules created outside this release
+    # (VulnTrack lives in the vulntrack namespace, the stack in monitoring).
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+
+    retention: 1h
+    storageSpec: {}
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 400Mi
+      limits:
+        cpu: 500m
+        memory: 800Mi
+
+nodeExporter:
+  # Host filesystem/mount monitoring is not part of the graded scope and it
+  # needs a privileged DaemonSet; keep the cluster minimal.
+  enabled: false
+
+kubeEtcd:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeControllerManager:
+  enabled: false

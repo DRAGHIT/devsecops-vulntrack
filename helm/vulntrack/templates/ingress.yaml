@@ -14,19 +14,21 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
+          # API traffic is routed straight to the Spring Boot Service, so the
+          # JVM owns /api/* and NGINX only serves the static bundle.
           - path: /api
             pathType: Prefix
             backend:
               service:
                 name: {{ include "vulntrack.fullname" $ }}-backend
                 port:
-                  number: 8080
+                  number: {{ $.Values.backend.service.port }}
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: {{ include "vulntrack.fullname" $ }}-frontend
                 port:
-                  number: 80
+                  number: {{ $.Values.frontend.service.port }}
     {{- end }}
 {{- end }}

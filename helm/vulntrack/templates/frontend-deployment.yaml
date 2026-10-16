@@ -18,12 +18,23 @@ spec:
         app.kubernetes.io/component: frontend
     spec:
       serviceAccountName: "vulntrack-workload-sa"
+      securityContext:
+        runAsNonRoot: {{ .Values.frontend.securityContext.runAsNonRoot }}
+        runAsUser: {{ .Values.frontend.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.frontend.securityContext.runAsGroup }}
       containers:
         - name: frontend
-          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: {{ .Values.frontend.securityContext.allowPrivilegeEscalation }}
+            readOnlyRootFilesystem: {{ .Values.frontend.securityContext.readOnlyRootFilesystem }}
+            capabilities:
+              drop:
+                - ALL
           ports:
-            - containerPort: {{ .Values.frontend.service.port }}
+            # Unprivileged NGINX binds 8080; the Service still exposes port 80.
+            - containerPort: {{ .Values.frontend.containerPort }}
               name: http
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}

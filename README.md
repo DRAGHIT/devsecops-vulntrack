@@ -57,7 +57,7 @@ flowchart TD
     Ingress -->|/api/*| API
     UI -->|REST Calls| API
     API --> Sec --> JPA --> DB
-    Prometheus -->|Scrape /actuator/prometheus| Actuator
+    Prometheus -->|Scrape /metrics| Actuator
     Grafana -->|Query Metrics| Prometheus
 ```
 
@@ -83,9 +83,9 @@ flowchart TD
    - **Authentication & RBAC**: In-memory / hashed credential authentication separating read-only `VIEWER` users from operational `ADMIN` users.
    - **Static & Dynamic Analysis**: GitHub Actions runs automated unit tests, OWASP Dependency-Check / dependency review, and GitLeaks secret scans.
    - **Trivy Container Scanning**: Docker image security scanning failing builds on high/critical container vulnerabilities.
-   - **Infrastructure as Code (IaC)**: Terraform manages Kubernetes namespaces, resource quotas, and baseline configuration.
-   - **Helm Deployment**: Modular, parameterized manifests with resource limits and health probes (`livenessProbe` / `readinessProbe`).
-   - **Observability**: Prometheus scrapes Spring Boot Actuator `/actuator/prometheus` metrics visualized in pre-configured Grafana dashboards.
+   - **Infrastructure as Code (IaC)**: Terraform provisions an AWS VPC (two public subnets), an EKS cluster, and a managed worker node group.
+   - **Helm Deployment**: Modular, parameterized manifests with resource limits, two replicas per tier, and health probes (`livenessProbe` / `readinessProbe`).
+   - **Observability**: Prometheus scrapes the Spring Boot `/metrics` endpoint, visualized in pre-configured Grafana dashboards.
 
 ---
 
@@ -117,19 +117,29 @@ flowchart TD
 │   │   └── main.tsx
 │   ├── Dockerfile           # Multi-stage Nginx-served static build
 │   └── package.json
-├── docker/                   # Local container orchestration
-│   └── docker-compose.yml   # Multi-service local environment (App + DB)
-├── terraform/                # Infrastructure as Code (Kubernetes Provider)
-│   ├── main.tf              # Namespaces, ServiceAccounts, ResourceQuotas
-│   ├── variables.tf
-│   └── outputs.tf
+├── docker-compose.yml        # Local container orchestration (App + API + DB), run from the repo root
+├── k8s/                      # Kubernetes bootstrap manifests
+│   ├── namespace.yaml        # vulntrack namespace (kubectl apply -f k8s/namespace.yaml)
+│   ├── resource-quota.yaml   # Namespace CPU/memory/pod quota
+│   ├── limit-range.yaml      # Default container requests/limits
+│   └── service-account.yaml  # Least-privilege workload ServiceAccount
+├── terraform/                # Infrastructure as Code (AWS provider)
+│   ├── main.tf              # Provider, default tags, AZ lookup
+│   ├── vpc.tf               # VPC, internet gateway, route table, two public subnets
+│   ├── security.tf          # EKS control-plane and worker node security groups
+│   ├── iam.tf               # Cluster and node IAM roles + managed policies
+│   ├── eks.tf               # EKS cluster + managed node group
+│   ├── variables.tf / outputs.tf
+│   └── terraform.tfvars.example
 ├── helm/                     # Kubernetes Helm Chart
 │   └── vulntrack/
 │       ├── Chart.yaml
 │       ├── values.yaml
-│       └── templates/       # Deployments, Services, Ingress, HPA
+│       └── templates/       # Deployments, Services, Ingress, HPA, Secret, PostgreSQL
 ├── monitoring/               # Observability manifests
-│   ├── prometheus/          # Scrape configs & alert rules
+│   ├── kube-prometheus-stack-values.yaml  # Helm values for Prometheus + Grafana
+│   ├── servicemonitor.yaml                # Scrape /metrics on the backend Service
+│   ├── prometheus/          # Scrape configs, alert rules, PrometheusRule CRD
 │   └── grafana/             # Dashboard JSON definitions
 ├── docs/                     # Documentation & Capstone Learning Handbook
 │   ├── handbook/            # 20-chapter comprehensive student manual
@@ -155,9 +165,9 @@ flowchart TD
 | **Container** | Docker | Multi-stage | Alpine/Distroless non-root images minimizing attack surface |
 | **CI/CD** | GitHub Actions | Latest | Integrated GitHub security scanning, GHCR publishing |
 | **Vulnerability Scanning** | Trivy | 0.50+ | Industry standard container and filesystem vulnerability scanner |
-| **IaC** | Terraform | 1.8+ | Declarative Kubernetes environment orchestration |
+| **IaC** | Terraform | 1.8+ | Declarative AWS VPC + EKS provisioning |
 | **Deployment**| Helm | 3.14+ | Templated, versioned Kubernetes deployment packages |
-| **Orchestration**| Kubernetes (Kind/Minikube) | 1.28+ | Cloud-native standard with Ingress and Horizontal Pod Autoscaling (HPA) |
+| **Orchestration**| Kubernetes (EKS / Kind / Minikube) | 1.28+ | Cloud-native standard with Ingress and Horizontal Pod Autoscaling (HPA) |
 | **Monitoring**| Prometheus + Grafana | 2.50+ / 10.4+ | Gold standard cloud-native metric gathering and visualization |
 
 ---
@@ -182,7 +192,6 @@ To launch PostgreSQL 16, Backend, and Frontend reverse-proxied together:
 
 ```powershell
 cp .env.example .env
-cd docker
 docker compose up --build
 ```
 
@@ -192,12 +201,40 @@ docker compose up --build
 | :--- | :--- | :--- |
 | **Frontend UI** | `http://localhost:5173` (or `http://localhost:3000` via Docker) | React SPA with Live Role Switcher |
 | **Swagger UI** | `http://localhost:8080/swagger-ui/index.html` | Interactive OpenAPI 3.0 testing console |
-| **Actuator Health** | `http://localhost:8080/actuator/health` | Liveness & Readiness probe status |
-| **Prometheus Metrics**| `http://localhost:8080/actuator/prometheus` | Raw telemetry scrape target |
+| **Health** | `http://localhost:8080/health` | Liveness & Readiness probe status |
+| **Prometheus Metrics**| `http://localhost:8080/metrics` | Raw telemetry scrape target |
 
 #### Default Test Accounts:
 - **Admin (Full Read/Write)**: Username: `admin` | Password: `AdminSecurePassword!2026`
 - **Viewer (Read-Only)**: Username: `viewer` | Password: `ViewerReadOnlyPassword!2026`
+
+---
+
+### 4. Kubernetes (Terraform + Helm + Observability)
+
+```powershell
+# Infrastructure: AWS VPC + EKS (needs your AWS credentials in the environment)
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+terraform init; terraform plan; terraform apply
+aws eks --region eu-west-1 update-kubeconfig --name vulntrack-capstone
+cd ..
+
+# Bootstrap namespace/quota/service-account, then deploy the chart
+kubectl apply -f k8s/
+helm upgrade --install vulntrack ./helm/vulntrack --namespace vulntrack `
+  --set backend.image.repository=ghcr.io/<owner>/vulntrack/backend `
+  --set backend.image.tag=<commit-sha> `
+  --set frontend.image.repository=ghcr.io/<owner>/vulntrack/frontend `
+  --set frontend.image.tag=<commit-sha>
+
+# Prometheus + Grafana
+kubectl apply -f monitoring/servicemonitor.yaml
+```
+
+Full command-by-command walkthrough, including the Grafana dashboard import and
+`terraform destroy`, lives in [monitoring/README.md](monitoring/README.md) and
+[Chapter 17](docs/handbook/17-end-to-end-deployment-guide.md).
 
 ---
 

@@ -1,0 +1,13 @@
+# Namespace-wide quota: stops a runaway JVM from starving the whole node.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: vulntrack-resource-quota
+  namespace: vulntrack
+spec:
+  hard:
+    requests.cpu: "2000m"
+    requests.memory: 2Gi
+    limits.cpu: "4000m"
+    limits.memory: 4Gi
+    pods: "15"

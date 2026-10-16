@@ -32,11 +32,14 @@ spec:
         runAsGroup: {{ .Values.backend.securityContext.runAsGroup }}
       containers:
         - name: backend
-          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           securityContext:
             allowPrivilegeEscalation: {{ .Values.backend.securityContext.allowPrivilegeEscalation }}
             readOnlyRootFilesystem: {{ .Values.backend.securityContext.readOnlyRootFilesystem }}
+            capabilities:
+              drop:
+                - ALL
           ports:
             - containerPort: {{ .Values.backend.service.port }}
               name: http
@@ -58,11 +61,21 @@ spec:
                 secretKeyRef:
                   name: {{ include "vulntrack.fullname" . }}-secrets
                   key: postgres-password
+            - name: APP_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vulntrack.fullname" . }}-secrets
+                  key: admin-username
             - name: APP_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "vulntrack.fullname" . }}-secrets
                   key: admin-password
+            - name: APP_VIEWER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vulntrack.fullname" . }}-secrets
+                  key: viewer-username
             - name: APP_VIEWER_PASSWORD
               valueFrom:
                 secretKeyRef:

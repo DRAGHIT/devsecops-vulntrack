@@ -38,7 +38,9 @@ USER 101
 EXPOSE 8080
 
 # Container Healthcheck
+# 127.0.0.1, not localhost: busybox wget prefers the AAAA record and NGINX only
+# binds the IPv4 socket, so the probe would report "connection refused".
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:8080/healthz || exit 1
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1:8080/healthz || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]

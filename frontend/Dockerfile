@@ -19,8 +19,10 @@ RUN npm run build
 
 # Stage 2: Production NGINX Host
 # nginx-unprivileged is the official flavour that runs as UID 101 and binds a
-# high port, so the container never needs root.
-FROM nginxinc/nginx-unprivileged:1.27-alpine AS runner
+# high port, so the container never needs root. The -slim variant is used
+# because the CI Trivy gate blocks on fixable HIGH/CRITICAL CVEs and the
+# 1.27-alpine tag still ships unpatched libcrypto3/libexpat/libpng.
+FROM nginxinc/nginx-unprivileged:1.30-alpine-slim AS runner
 
 # Copy custom Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf

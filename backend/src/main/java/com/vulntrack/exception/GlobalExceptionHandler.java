@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +31,23 @@ public class GlobalExceptionHandler {
             "Not Found",
             "RESOURCE_NOT_FOUND",
             ex.getMessage(),
+            request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    // Since Spring 6.1 an unmapped path reaches the static resource handler and
+    // throws this instead of producing a plain 404, so without this advice any
+    // typo in a URL would be reported as a server error.
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleUnmappedPath(NoResourceFoundException ex,
+                                                               HttpServletRequest request) {
+        log.warn("No endpoint mapped for path {}", request.getRequestURI());
+        ErrorResponseDto error = ErrorResponseDto.of(
+            HttpStatus.NOT_FOUND.value(),
+            "Not Found",
+            "ENDPOINT_NOT_FOUND",
+            "No endpoint matches the requested path: " + request.getRequestURI(),
             request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);

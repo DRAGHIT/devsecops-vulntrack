@@ -1,0 +1,11 @@
+# Accepted-risk exceptions for the blocking Trivy gate in .github/workflows/ci.yml.
+# Both advisories are only fixed by Spring Framework 7.0.9, which requires a
+# Spring Boot 4 upgrade - out of scope while the capstone is being demonstrated.
+# Neither vulnerable code path exists in VulnTrack, so both are unreachable here.
+# The non-blocking SARIF steps still publish every finding, unfiltered, to the
+# GitHub Security tab, so nothing is hidden from reviewers.
+vulnerabilities:
+  - id: CVE-2026-47884
+    statement: "XsltView remote code execution: VulnTrack registers no XsltViewResolver and renders only JSON via @RestController."
+  - id: CVE-2026-47890
+    statement: "Server-Sent Events stream corruption: no endpoint returns text/event-stream and no SseEmitter is used."

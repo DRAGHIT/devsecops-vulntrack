@@ -121,6 +121,9 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           load: true
+          # Always resolve the base image fresh, otherwise the Trivy gate below
+          # can score a stale cached OS layer instead of the one being shipped.
+          pull: true
           tags: ${{ steps.slug.outputs.backend }}:${{ github.sha }}
 
       - name: Build Frontend Image
@@ -129,30 +132,33 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           load: true
+          pull: true
           tags: ${{ steps.slug.outputs.frontend }}:${{ github.sha }}
 
       # --- DevSecOps gate: fail the pipeline on fixable HIGH / CRITICAL CVEs ---
       - name: Trivy Gate - Backend Image (fails on HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ steps.slug.outputs.backend }}:${{ github.sha }}
           format: 'table'
           severity: 'HIGH,CRITICAL'
           ignore-unfixed: true
+          trivyignores: '.trivyignore.yaml'
           exit-code: '1'
 
       - name: Trivy Gate - Frontend Image (fails on HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ steps.slug.outputs.frontend }}:${{ github.sha }}
           format: 'table'
           severity: 'HIGH,CRITICAL'
           ignore-unfixed: true
+          trivyignores: '.trivyignore.yaml'
           exit-code: '1'
 
       # --- Detailed findings reported into the GitHub Security tab (non-blocking) ---
       - name: Trivy SARIF Report - Backend Image
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ steps.slug.outputs.backend }}:${{ github.sha }}
           format: 'sarif'
@@ -161,7 +167,7 @@ jobs:
           exit-code: '0'
 
       - name: Trivy SARIF Report - Frontend Image
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ steps.slug.outputs.frontend }}:${{ github.sha }}
           format: 'sarif'

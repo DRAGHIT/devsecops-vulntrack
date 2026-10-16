@@ -13,11 +13,6 @@ permissions:
   packages: write
   security-events: write
 
-env:
-  REGISTRY: ghcr.io
-  BACKEND_IMAGE_NAME: ${{ github.repository }}/backend
-  FRONTEND_IMAGE_NAME: ${{ github.repository }}/frontend
-
 jobs:
   # ============================================================================
   # 1. Automated Secret & Static Code Scanning
@@ -99,6 +94,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # GHCR refuses uppercase path segments, and github.repository keeps the
+      # owner's capitalisation, so the image references are normalised here.
+      - name: Resolve GHCR Image References
+        id: slug
+        run: |
+          PREFIX="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+          echo "backend=ghcr.io/${PREFIX}/backend" >> "$GITHUB_OUTPUT"
+          echo "frontend=ghcr.io/${PREFIX}/frontend" >> "$GITHUB_OUTPUT"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -108,7 +112,7 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           load: true
-          tags: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:test
+          tags: ${{ steps.slug.outputs.backend }}:${{ github.sha }}
 
       - name: Build Frontend Image
         uses: docker/build-push-action@v5
@@ -116,23 +120,41 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           load: true
-          tags: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:test
+          tags: ${{ steps.slug.outputs.frontend }}:${{ github.sha }}
 
-      # Trivy Security Scanner: Backend Image
-      - name: Run Trivy Vulnerability Scanner on Backend Image
+      # --- DevSecOps gate: fail the pipeline on fixable HIGH / CRITICAL CVEs ---
+      - name: Trivy Gate - Backend Image (fails on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@0.20.0
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:test
+          image-ref: ${{ steps.slug.outputs.backend }}:${{ github.sha }}
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: Trivy Gate - Frontend Image (fails on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          image-ref: ${{ steps.slug.outputs.frontend }}:${{ github.sha }}
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '1'
+
+      # --- Detailed findings reported into the GitHub Security tab (non-blocking) ---
+      - name: Trivy SARIF Report - Backend Image
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          image-ref: ${{ steps.slug.outputs.backend }}:${{ github.sha }}
           format: 'sarif'
           output: 'trivy-backend-results.sarif'
           severity: 'CRITICAL,HIGH'
           exit-code: '0'
 
-      # Trivy Security Scanner: Frontend Image
-      - name: Run Trivy Vulnerability Scanner on Frontend Image
+      - name: Trivy SARIF Report - Frontend Image
         uses: aquasecurity/trivy-action@0.20.0
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:test
+          image-ref: ${{ steps.slug.outputs.frontend }}:${{ github.sha }}
           format: 'sarif'
           output: 'trivy-frontend-results.sarif'
           severity: 'CRITICAL,HIGH'
@@ -157,11 +179,12 @@ jobs:
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Push Images to GHCR
+      # Publish images. Tags are immutable Git SHAs only — never "latest" —
+      # so a deployment can always name the exact build it is running.
       - name: Push Backend Image to GHCR
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         uses: docker/build-push-action@v5
@@ -169,9 +192,7 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${{ github.sha }}
+          tags: ${{ steps.slug.outputs.backend }}:${{ github.sha }}
 
       - name: Push Frontend Image to GHCR
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
@@ -180,6 +201,4 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ github.sha }}
+          tags: ${{ steps.slug.outputs.frontend }}:${{ github.sha }}

@@ -24,7 +24,8 @@ metadata:
   name: backend
   labels:
     {{- include "vulntrack.labels" . | nindent 4 }}
-    app.kubernetes.io/component: backend
+    # Distinct component so the ServiceMonitor does not scrape each pod twice.
+    app.kubernetes.io/component: backend-alias
 spec:
   type: ClusterIP
   ports:

@@ -23,6 +23,9 @@ FROM eclipse-temurin:17-jre-alpine AS runner
 
 WORKDIR /app
 
+# The upstream JRE image lags Alpine security fixes, which the Trivy gate blocks on.
+RUN apk upgrade --no-cache
+
 # Security: Create non-root system group and user
 RUN addgroup --system --gid 10001 appgroup && \
     adduser --system --uid 10001 --ingroup appgroup --no-create-home appuser

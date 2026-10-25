@@ -20,14 +20,16 @@ grafana:
 
   # The VulnTrack dashboard JSON binds panels to datasource uid "prometheus",
   # so the datasource is created with exactly that uid.
-  extraDatasources:
-    vulntrack-prometheus:
-      name: Prometheus
-      type: prometheus
-      access: proxy
-      uid: prometheus
-      url: http://kps-kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-      isDefault: true
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          uid: prometheus
+          url: http://kps-kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+          isDefault: true
 
   sidecar:
     dashboards:

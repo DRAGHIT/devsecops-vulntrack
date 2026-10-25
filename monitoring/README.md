@@ -53,6 +53,7 @@ kubectl apply -f monitoring/prometheus/prometheus-rule.yaml
 kubectl -n monitoring create configmap vulntrack-grafana-dashboard `
   --from-file=vulntrack-telemetry.json=monitoring/grafana/dashboard-vulntrack.json `
   --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n monitoring label configmap vulntrack-grafana-dashboard grafana_dashboard=1 --overwrite
 ```
 
 The Grafana sidecar picks the ConfigMap up within ~30 seconds (label
